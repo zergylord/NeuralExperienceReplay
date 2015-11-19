@@ -10,6 +10,7 @@ require 'optim'
 require 'image'
 require 'load'
 require 'distributions'
+require 'pprint'
 util = require 'util/my_torch_utils'
 require 'util/generate_minibatch'
 P = torch.zeros(10,2)
@@ -39,7 +40,7 @@ parameters, gradients = network:getParameters()
 
 --Replay setup-----
 batch_size = 36
---
+--[[
 training_mode = 'replay'
 max_steps = 1e7
 --]]

@@ -1,3 +1,4 @@
+require 'pprint'
 modes = {'dp','replay','represent','uniform'}
 max_steps = 1e5
 trials = 10

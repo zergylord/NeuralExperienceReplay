@@ -16,7 +16,7 @@ require 'LinearVA'
 require 'load'
 
 require 'image'
-require 'distributions'
+--require 'distributions'
 data = load_mnist()
 
 dim_input = data.train:size(2) 
