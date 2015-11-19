@@ -40,8 +40,8 @@ parameters, gradients = network:getParameters()
 
 --Replay setup-----
 batch_size = 36
---[[
-training_mode = 'replay'
+--
+training_mode = 'dp'
 max_steps = 1e7
 --]]
 burn_in = 100

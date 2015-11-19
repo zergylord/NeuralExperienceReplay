@@ -87,7 +87,7 @@ function load_generator()
     local gen_parameters = va:getParameters()
 
     gen_parameters:copy(torch.load('save/2_parameters.t7'))
-    return decoder
+    return decoder,dim_hidden
 end
 function load_classifier()
     --the classifier model -------------------------------

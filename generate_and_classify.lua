@@ -20,48 +20,10 @@ require 'image'
 data = load_mnist()
 
 dim_input = data.train:size(2) 
-dim_hidden = 10
 hidden_units_encoder = 400
 hidden_units_decoder = 400
---The VAE model-------------------------------
-
---Encoding layer
-encoder = nn.Sequential()
-encoder:add(nn.LinearVA(dim_input,hidden_units_encoder))
-encoder:add(nn.Tanh())
-
-z = nn.ConcatTable()
-z:add(nn.LinearVA(hidden_units_encoder, dim_hidden))
-z:add(nn.LinearVA(hidden_units_encoder, dim_hidden))
-
-encoder:add(z)
-
-va = nn.Sequential()
-va:add(encoder)
-
---Reparametrization step
-va:add(nn.Reparametrize(dim_hidden))
-
---Decoding layer
-decoder = nn.Sequential()
-decoder:add(nn.LinearVA(dim_hidden, hidden_units_decoder))
-decoder:add(nn.Tanh())
-decoder:add(nn.LinearVA(hidden_units_decoder, dim_input))
-decoder:add(nn.Sigmoid())
-va:add(decoder)
-
-gen_parameters = va:getParameters()
-
-gen_parameters:copy(torch.load('save/parameters.t7'))
---the classifier model -------------------------------
-dim_hid = 400
-input = nn.Identity()()
-hid = nn.ReLU()(nn.Linear(dim_input,dim_hid)(input))
-output = nn.LogSoftMax()(nn.Linear(dim_hid,10)(hid))
-network = nn.gModule({input},{output})
-
-class_parameters = network:getParameters()
-class_parameters:copy(torch.load('save/classify_parameters.t7'))
+decoder,dim_hidden = load_generator()
+network = load_classifier()
 
 sample_size = 224
 --[[generate 1 big grid of samples---------------------------------------
@@ -108,7 +70,7 @@ classes = classes:squeeze()
 data = {}
 data.x_train = img[{{1,50000},{}}]
 data.t_train = classes[{{1,50000}}]
-torch.save('datasets/gen_data2.t7',data)
+torch.save('datasets/gen_data.t7',data)
 --[[display images------------------------------------------
 side = math.sqrt(img[1]:size()[1])
 for r = 1,sample_size do
