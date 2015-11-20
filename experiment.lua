@@ -1,7 +1,7 @@
 require 'pprint'
 modes = {'dp','replay','represent','uniform'}
-max_steps = 1e5
-trials = 10
+max_steps = 5e4
+trials = 3
 results = torch.zeros(#modes,trials,max_steps)
 for t = 1,trials do
     print('-----------------------------',t)
