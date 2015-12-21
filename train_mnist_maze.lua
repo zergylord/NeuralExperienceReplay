@@ -39,12 +39,14 @@ network = nn.gModule({input},{out})
 parameters, gradients = network:getParameters()
 
 --Replay setup-----
+--batch_size = 2^10
 batch_size = 36
 --[[
-training_mode = 'dp'
+training_mode = 'represent'
 max_steps = 1e7
 --]]
-burn_in = 100
+interval = 1e3
+burn_in = batch_size
 if training_mode == 'dp' then
     batch_size = 20
     replay_size = batch_size
@@ -72,7 +74,7 @@ if training_mode == 'dp' then
         end
     end
 elseif training_mode == 'replay' then
-    replay_size = 1000
+    replay_size = 2000
     state_hist = torch.zeros(replay_size,state_dim)
     action_hist = torch.zeros(replay_size,1)
     state_prime_hist = torch.zeros(replay_size,state_dim)
@@ -90,7 +92,7 @@ elseif training_mode == 'uniform' or training_mode == 'represent'  then
     state_prime_hist = torch.zeros(replay_size,state_dim)
     not_term_hist = torch.ones(replay_size,1)
     reward_hist = torch.zeros(replay_size,1)
-    generator = load_generator()
+    generator,dim_hidden = load_generator()
     classifier = load_classifier()
 end
 -----------------
@@ -118,10 +120,11 @@ a = torch.random(2)
 total_reward = 0
 total_loss = 0
 local mse_crit = nn.MSECriterion()
-interval = 1e4
 state_counts = torch.zeros(10)
+state_action_counts = torch.zeros(10,2)
 reward_log = torch.zeros(max_steps)
 for t=1,max_steps do
+    state_action_counts[s][a] = state_action_counts[s][a] + 1
     sPrime = P[s][a]
     state_prime = get_mnist_digit(sPrime) 
     state_counts[sPrime] = state_counts[sPrime] + 1
@@ -150,9 +153,26 @@ for t=1,max_steps do
             state_prime_hist[i+10]:copy(get_mnist_digit(sPrime_hist[i+10]))
         end
     elseif training_mode == 'uniform' or training_mode == 'represent' then
-        state_hist,s_hist = generate_minibatch()
+        state_hist,s_hist = generate_minibatch(dim_hidden)
+        --select next action
+        temp_q = network:forward(state_hist)
+        _,a = torch.max(temp_q,2)
+        mask = torch.rand(batch_size):lt(epsilon):reshape(batch_size,1)
+        if mask:sum() > 0 then
+            a[mask] = torch.rand(mask:sum()):gt(.5):add(1):long()
+        end
         for i=1,batch_size do
-            action_hist[i] = torch.random(2)
+            action_hist[i] = a[i] 
+            --action_hist[i] = torch.random(2)
+            --[[
+            if torch.rand(1)[1] < 
+                    state_action_counts[s_hist[i][1] ][1]/
+                    state_action_counts[s_hist[i][1] ]:sum() then 
+                action_hist[i] = 1
+            else
+                action_hist[i] = 2
+            end
+            --]]
             sPrime_hist[i] = P[s_hist[i][1]][action_hist[i][1]]
             if sPrime_hist[i] == goal then
                 not_term_hist[i] = 0
@@ -164,6 +184,7 @@ for t=1,max_steps do
             state_prime_hist[i]:copy(get_mnist_digit(sPrime_hist[i]))
         end
     end
+    collectgarbage()
     --update network----------
     local opfunc = function(x)
         if x ~= parameters then
