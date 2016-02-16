@@ -16,7 +16,7 @@ require 'LinearVA'
 require 'load'
 
 require 'image'
---require 'distributions'
+require 'distributions'
 data = load_mnist()
 
 dim_input = data.train:size(2) 
@@ -25,8 +25,9 @@ hidden_units_decoder = 400
 decoder,dim_hidden = load_generator()
 network = load_classifier()
 
+--sample_size = 20
 sample_size = 224
---[[generate 1 big grid of samples---------------------------------------
+--generate 1 big grid of samples---------------------------------------
 represent_sample = distributions.norm.qtl(torch.linspace(.01,.99,sample_size),0,1)
 grid_sample = torch.zeros(sample_size^2,2)
 for i = 1,sample_size do
@@ -37,8 +38,10 @@ for i = 1,sample_size do
     end
 end
 --]]
+
 --uniform sampling
-grid_sample = torch.randn(sample_size^2,dim_hidden)
+--grid_sample = torch.randn(sample_size^2,dim_hidden)
+
 --TODO:finish this option
 --[[generate lots of minibatch size samples-----------------------------
 sample_size = 6
@@ -59,7 +62,6 @@ end
 
 
 
---grid_sample = represent_sample:reshape(10,1):repeatTensor(1,dim_hidden)
 img = decoder:forward(grid_sample)
 
 --classify samples-----------------------------------------
@@ -67,11 +69,14 @@ img = decoder:forward(grid_sample)
 class_probs = network:forward(img)
 _, classes = class_probs:max(2)
 classes = classes:squeeze()
+--
 data = {}
 data.x_train = img[{{1,50000},{}}]
 data.t_train = classes[{{1,50000}}]
 torch.save('datasets/gen_data.t7',data)
+--]]
 --[[display images------------------------------------------
+print('got here')
 side = math.sqrt(img[1]:size()[1])
 for r = 1,sample_size do
     local row_image
