@@ -48,6 +48,7 @@ function load_mnist()
     local data.test_labels = f:read('t_valid'):all():double()
     --]]
     data.train = data.x_train
+    data.labels = data.t_train
     data.test = data.x_test
     return data
 end
