@@ -5,7 +5,7 @@ function KLDCriterion:updateOutput(input, target)
 
     local KLDelement = (input[2] + 1):add(-1,torch.pow(input[1],2)):add(-1,torch.exp(input[2]))
     self.output = 0.5 * torch.sum(KLDelement)
-    return self.output
+    return self.output,KLDelement
 end
 
 function KLDCriterion:updateGradInput(input, target)
